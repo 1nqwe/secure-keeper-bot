@@ -12,3 +12,11 @@ async def add_user(user_id, full_name, username):
         await connect.commit()
     await cursor.close()
     await connect.close()
+
+async def add_password(user_id, title, login, password):
+    async with aiosqlite.connect('app/bot/database/db.db') as db:
+        async with db.execute('INSERT INTO passwords (user_id, title, login, password) '
+                              'VALUES (?, ?, ?, ?)',
+                              (user_id, title, login, password)) as cursor:
+            await db.commit()
+            return await cursor.fetchone()
