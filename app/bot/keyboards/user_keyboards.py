@@ -63,6 +63,6 @@ def seed_phrase_kb():
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text='Seed-фраза (Русская)', callback_data='russian_seed_phrase'))
     builder.add(InlineKeyboardButton(text='Seed-фраза (Английская)', callback_data='english_seed_phrase'))
-    builder.add(InlineKeyboardButton(text='Назад', callback_data='generate_seed_phrase'))
+    builder.add(InlineKeyboardButton(text='Назад', callback_data='generator_menu'))
     builder.adjust(1)
     return builder.as_markup()
