@@ -11,4 +11,15 @@ class AddNote(StatesGroup):
     note = State()
 
 class Encoder(StatesGroup):
-    message = State()
+    encode_base64 = State()
+    encode_base32 = State()
+    encode_hex = State()
+    encode_url = State()
+    encode_rot13 = State()
+
+class Decoder(StatesGroup):
+    decode_base64 = State()
+    decode_base32 = State()
+    decode_hex = State()
+    decode_url = State()
+    decode_rot13 = State()

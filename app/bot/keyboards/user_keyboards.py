@@ -72,7 +72,7 @@ def encryption_menu_kb():
     builder.add(InlineKeyboardButton(text='Зашифровать', callback_data='encryption'))
     builder.add(InlineKeyboardButton(text='Расшифровать', callback_data='decrypt'))
     builder.add(InlineKeyboardButton(text='Назад', callback_data='to_menu'))
-    builder.adjust()
+    builder.adjust(1)
     return builder.as_markup()
 
 def encryption_kb():
@@ -82,7 +82,7 @@ def encryption_kb():
     builder.add(InlineKeyboardButton(text='Hex', callback_data='encode_hex'))
     builder.add(InlineKeyboardButton(text='URL', callback_data='encode_url'))
     builder.add(InlineKeyboardButton(text='Rot13', callback_data='encode_rot13'))
-    builder.adjust()
+    builder.adjust(1)
     return builder.as_markup()
 
 def decrypt_kb():
@@ -92,5 +92,5 @@ def decrypt_kb():
     builder.add(InlineKeyboardButton(text='Hex', callback_data='decode_hex'))
     builder.add(InlineKeyboardButton(text='URL', callback_data='decode_url'))
     builder.add(InlineKeyboardButton(text='Rot13', callback_data='decode_rot13'))
-    builder.adjust()
+    builder.adjust(1)
     return builder.as_markup()
