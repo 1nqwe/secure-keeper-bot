@@ -25,3 +25,44 @@ def password_manager_menu_kb():
     builder.adjust(1)
     return builder.as_markup()
 
+def my_passwords_kb(passwords):
+    builder = InlineKeyboardBuilder()
+
+    for password_id, title, login, password in passwords:
+        builder.button(
+            text=f"{title}",
+            callback_data=f"password_{password_id}"
+        )
+    builder.button(text="Меню",
+                    callback_data="to_menu")
+    builder.adjust(1)
+    return builder.as_markup()
+
+def password_kb(password_id):
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text='Удалить пароль', callback_data=f'delete_password_{password_id}'))
+    builder.add(InlineKeyboardButton(text='Назад', callback_data='list_passwords'))
+    builder.adjust(1)
+    return builder.as_markup()
+
+def back_to_passwords_list():
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text='Назад к списку', callback_data='list_passwords'))
+    builder.adjust(1)
+    return builder.as_markup()
+
+def generator_menu_kb():
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text='Пароль', callback_data='generate_password'))
+    builder.add(InlineKeyboardButton(text='Seed-фраза', callback_data='generate_seed_phrase'))
+    builder.add(InlineKeyboardButton(text='Назад', callback_data='to_menu'))
+    builder.adjust(1)
+    return builder.as_markup()
+
+def seed_phrase_kb():
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text='Seed-фраза (Русская)', callback_data='russian_seed_phrase'))
+    builder.add(InlineKeyboardButton(text='Seed-фраза (Английская)', callback_data='english_seed_phrase'))
+    builder.add(InlineKeyboardButton(text='Назад', callback_data='generate_password'))
+    builder.adjust(1)
+    return builder.as_markup()

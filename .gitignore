@@ -2,3 +2,4 @@
 /venv/
 /.env
 /app/bot/database/db.db
+/config.py

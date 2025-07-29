@@ -20,3 +20,20 @@ async def add_password(user_id, title, login, password):
                               (user_id, title, login, password)) as cursor:
             await db.commit()
             return await cursor.fetchone()
+
+async def get_all_user_passwords(user_id):
+    async with aiosqlite.connect('app/bot/database/db.db') as db:
+        async with db.execute("SELECT id, title, login, password FROM passwords WHERE user_id = ?",
+                              (user_id,)) as cursor:
+            return await cursor.fetchall()
+
+async def get_password_info(password_id):
+    async with aiosqlite.connect('app/bot/database/db.db') as db:
+        async with db.execute("SELECT title, login, password, created_at FROM passwords WHERE id = ?",
+                              (password_id, )) as cursor:
+            return await cursor.fetchone()
+
+async def delete_password(password_id):
+    async with aiosqlite.connect('app/bot/database/db.db') as db:
+        await db.execute("DELETE FROM passwords WHERE id = ?", (password_id,))
+        await db.commit()

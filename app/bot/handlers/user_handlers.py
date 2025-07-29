@@ -5,9 +5,12 @@ from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
-from app.bot.database.database import add_user, add_password
-from app.bot.keyboards.user_keyboards import to_menu_kb, main_menu_kb, password_manager_menu_kb
+from app.bot.database.database import add_user, add_password, get_all_user_passwords, get_password_info, delete_password
+from app.bot.keyboards.user_keyboards import to_menu_kb, main_menu_kb, password_manager_menu_kb, my_passwords_kb, \
+    password_kb, back_to_passwords_list, generator_menu_kb, seed_phrase_kb
 from app.bot.states.user_states import AddPassword
+from app.security.password import generate_password
+from app.security.seed_phrase import generate_seed_phrase
 
 user_router = Router()
 
@@ -74,3 +77,53 @@ async def add_password_step_4(message: Message, state: FSMContext):
     finally:
         await state.clear()
 
+@user_router.callback_query(F.data == 'list_passwords')
+async def list_passwords(call: CallbackQuery):
+    passwords = await get_all_user_passwords(call.from_user.id)
+    await call.message.edit_text('Список', reply_markup=my_passwords_kb(passwords))
+
+@user_router.callback_query(F.data.startswith("password_"))
+async def task_info(call: CallbackQuery):
+    password_id = call.data.split("_")[1]
+    password_info = await get_password_info(password_id)
+    title, login, password, created_at = password_info
+    message = (
+                f"<b>Название:</b> <code>{title}</code>\n"
+                f"<b>Логин:</b> <code>{login}</code>\n"
+                f"<b>Пароль:</b> <code>{password}</code>\n"
+                f"<b>Дата создания:</b> <code>{created_at.split()[0]}</code>"
+    )
+    await call.message.edit_text(message, reply_markup=password_kb(password_id), parse_mode="HTML")
+
+@user_router.callback_query(F.data.startswith("delete_password_"))
+async def del_task(call: CallbackQuery):
+    password_id = call.data.split("_")[2]
+    await delete_password(password_id)
+    await call.message.edit_text('Пароль удален', reply_markup=back_to_passwords_list())
+
+
+@user_router.callback_query(F.data == 'generator_menu')
+async def generator_menu(call: CallbackQuery):
+    await call.message.edit_text('Выберите что сгенерировать', reply_markup=generator_menu_kb())
+
+@user_router.callback_query(F.data == 'generate_password')
+async def generate_password_hand(call: CallbackQuery):
+    await call.message.edit_text(f'Ваш сгенерированный пароль:\n'
+                                 f'<code>{generate_password()}</code>',
+                                 reply_markup=to_menu_kb(), parse_mode='HTML')
+
+@user_router.callback_query(F.data == 'generate_seed_phrase')
+async def generate_seed_phrase_language(call: CallbackQuery):
+    await call.message.edit_text('Выберите язык генерации:', reply_markup=seed_phrase_kb())
+
+@user_router.callback_query(F.data == 'russian_seed_phrase')
+async def russian_phrase(call: CallbackQuery):
+    await call.message.edit_text(f'Ваша seed-фраза:\n'
+                                 f'<code>{generate_seed_phrase(12, 'russian')}</code>',
+                                 reply_markup=to_menu_kb(), parse_mode='HTML')
+
+@user_router.callback_query(F.data == 'english_seed_phrase')
+async def english_phrase(call: CallbackQuery):
+    await call.message.edit_text(f'Ваша seed-фраза:\n'
+                                 f'<code>{generate_seed_phrase(12, 'english')}</code>',
+                                 reply_markup=to_menu_kb(), parse_mode='HTML')
