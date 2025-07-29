@@ -7,8 +7,10 @@ from aiogram.types import Message, CallbackQuery
 
 from app.bot.database.database import add_user, add_password, get_all_user_passwords, get_password_info, delete_password
 from app.bot.keyboards.user_keyboards import to_menu_kb, main_menu_kb, password_manager_menu_kb, my_passwords_kb, \
-    password_kb, back_to_passwords_list, generator_menu_kb, seed_phrase_kb
-from app.bot.states.user_states import AddPassword
+    password_kb, back_to_passwords_list, generator_menu_kb, seed_phrase_kb, encryption_menu_kb, encryption_kb, \
+    decrypt_kb
+from app.bot.states.user_states import AddPassword, Encoder
+from app.security.encryption import encode_base64, decode_base64
 from app.security.password import generate_password
 from app.security.seed_phrase import generate_seed_phrase
 
@@ -127,3 +129,43 @@ async def english_phrase(call: CallbackQuery):
     await call.message.edit_text(f'Ваша seed-фраза:\n'
                                  f'<code>{generate_seed_phrase(12, 'english')}</code>',
                                  reply_markup=to_menu_kb(), parse_mode='HTML')
+
+@user_router.callback_query(F.data == 'encryption_menu')
+async def encryption_menu(call: CallbackQuery):
+    await call.message.edit_text('Что сделать?', reply_markup=encryption_menu_kb())
+
+@user_router.callback_query(F.data == 'encryption')
+async def encryption(call: CallbackQuery):
+    await call.message.edit_text('Выберите кодировку', reply_markup=encryption_kb())
+
+@user_router.callback_query(F.data == 'decrypt')
+async def encryption(call: CallbackQuery):
+    await call.message.edit_text('Выберите кодировку', reply_markup=decrypt_kb())
+
+@user_router.callback_query(F.data == 'encode_base64')
+async def encode_base64_step_1(call: CallbackQuery, state: FSMContext):
+    await state.set_state(Encoder.message)
+    await call.message.edit_text('Напишите сообщение для зашифровки')
+
+@user_router.message(Encoder.message)
+async def encode_base64_step_2(message: Message, state: FSMContext):
+    await state.update_data(message=message.text)
+    data = await state.get_data()
+    encoded = encode_base64(data['message'])
+    await message.answer(f'Ваше зашифрованное сообщение:\n'
+                         f'<code>{encoded}</code>', parse_mode='HTML')
+    await state.clear()
+
+@user_router.callback_query(F.data == 'decode_base64')
+async def decode_base64_step_1(call: CallbackQuery, state: FSMContext):
+    await state.set_state(Encoder.message)
+    await call.message.edit_text('Напишите сообщение для расшифровки')
+
+@user_router.message(Encoder.message)
+async def decode_base64_step_2(message: Message, state: FSMContext):
+    await state.update_data(message=message.text)
+    data = await state.get_data()
+    decoded = decode_base64(data['message'])
+    await message.answer(f'Ваше расшифрованное сообщение:'
+                         f'\n<code>{decoded}</code>', parse_mode='HTML')
+    await state.clear()

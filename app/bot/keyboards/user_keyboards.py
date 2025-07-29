@@ -66,3 +66,31 @@ def seed_phrase_kb():
     builder.add(InlineKeyboardButton(text='Назад', callback_data='generator_menu'))
     builder.adjust(1)
     return builder.as_markup()
+
+def encryption_menu_kb():
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text='Зашифровать', callback_data='encryption'))
+    builder.add(InlineKeyboardButton(text='Расшифровать', callback_data='decrypt'))
+    builder.add(InlineKeyboardButton(text='Назад', callback_data='to_menu'))
+    builder.adjust()
+    return builder.as_markup()
+
+def encryption_kb():
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text='Base64', callback_data='encode_base64'))
+    builder.add(InlineKeyboardButton(text='Base32', callback_data='encode_base32'))
+    builder.add(InlineKeyboardButton(text='Hex', callback_data='encode_hex'))
+    builder.add(InlineKeyboardButton(text='URL', callback_data='encode_url'))
+    builder.add(InlineKeyboardButton(text='Rot13', callback_data='encode_rot13'))
+    builder.adjust()
+    return builder.as_markup()
+
+def decrypt_kb():
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text='Base64', callback_data='decode_base64'))
+    builder.add(InlineKeyboardButton(text='Base32', callback_data='decode_base32'))
+    builder.add(InlineKeyboardButton(text='Hex', callback_data='decode_hex'))
+    builder.add(InlineKeyboardButton(text='URL', callback_data='decode_url'))
+    builder.add(InlineKeyboardButton(text='Rot13', callback_data='decode_rot13'))
+    builder.adjust()
+    return builder.as_markup()

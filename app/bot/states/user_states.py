@@ -9,3 +9,6 @@ class AddPassword(StatesGroup):
 class AddNote(StatesGroup):
     title = State()
     note = State()
+
+class Encoder(StatesGroup):
+    message = State()
