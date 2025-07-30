@@ -21,6 +21,7 @@ def main_menu_kb():
     builder.add(InlineKeyboardButton(text="Менеджер паролей", callback_data="password_manager_menu"))
     builder.add(InlineKeyboardButton(text="Генератор", callback_data="generator_menu"))
     builder.add(InlineKeyboardButton(text="Проверка на утечки", callback_data="leaks_menu"))
+    builder.add(InlineKeyboardButton(text="Экстренно удалить все данные", callback_data="delete_all_data_menu"))
     builder.adjust(1)
     return builder.as_markup()
 
@@ -136,5 +137,12 @@ def note_kb(note_id):
 def back_to_notes_list_kb():
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text='Назад к списку', callback_data='list_notes'))
+    builder.adjust(1)
+    return builder.as_markup()
+
+def delete_all_data_kb():
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text='Да, я хочу удалить все данные', callback_data=f'delete_all_data'))
+    builder.add(InlineKeyboardButton(text='Нет, вернуться назад', callback_data='to_menu'))
     builder.adjust(1)
     return builder.as_markup()

@@ -6,10 +6,11 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
 from app.bot.database.database import add_user, add_password, get_all_user_passwords, get_password_info, \
-    delete_password, add_note, get_all_user_notes, delete_note, get_note_info
+    delete_password, add_note, get_all_user_notes, delete_note, get_note_info, del_all_data
 from app.bot.keyboards.user_keyboards import to_menu_kb, main_menu_kb, password_manager_menu_kb, my_passwords_kb, \
     password_kb, generator_menu_kb, seed_phrase_kb, encryption_menu_kb, encryption_kb, \
-    decrypt_kb, leaks_menu_kb, notes_menu_kb, note_kb, back_to_passwords_list_kb, back_to_notes_list_kb, my_notes_kb
+    decrypt_kb, leaks_menu_kb, notes_menu_kb, note_kb, back_to_passwords_list_kb, back_to_notes_list_kb, my_notes_kb, \
+    delete_all_data_kb
 from app.bot.services.leakcheck import check_email_leakcheck
 from app.bot.states.user_states import AddPassword, Encoder, Decoder, CheckLeaks, AddNote
 from app.security.encryption import encode_base64, decode_base64, encode_base32, decode_base32, encode_hex, decode_hex, \
@@ -36,7 +37,7 @@ async def password_manager_menu(call: CallbackQuery):
 async def add_password_step_1(call: CallbackQuery, state: FSMContext):
     await state.set_state(AddPassword.title)
     await call.message.edit_text('Введите заголовок:\n\n'
-                                 '<i>это сообщение удалится через 5 секунд</i>',reply_markup=to_menu_kb(), parse_mode="HTML")
+                                 '<i>это сообщение удалится через 5 секунд</i>', parse_mode="HTML")
     await asyncio.sleep(5)
     await call.message.delete()
 
@@ -296,8 +297,8 @@ async def leaks_menu(call: CallbackQuery):
 async def email_leaks_step_1(call: CallbackQuery, state: FSMContext):
     await state.set_state(CheckLeaks.email)
     await call.message.edit_text('Введите почту\n\n'
-                                 '<i>Это сообщение удалится через 5 секунд</i>', parse_mode="HTML")
-    await asyncio.sleep(5)
+                                 '<i>Это сообщение удалится через 10 секунд</i>', parse_mode="HTML")
+    await asyncio.sleep(10)
     await call.message.delete()
 
 @user_router.message(CheckLeaks.email)
@@ -358,7 +359,6 @@ async def notes_list(call: CallbackQuery):
 async def note_info(call: CallbackQuery):
     note_id = call.data.split("_")[1]
     note_inf = await get_note_info(note_id)
-    print(note_inf)
     title, note, created_at = note_inf
     message = (
                 f"<b>Название:</b> <code>{title}</code>\n"
@@ -372,3 +372,12 @@ async def del_task(call: CallbackQuery):
     note_id = call.data.split("_")[2]
     await delete_note(note_id)
     await call.message.edit_text('Заметка удалена', reply_markup=back_to_notes_list_kb())
+
+@user_router.callback_query(F.data == 'delete_all_data_menu')
+async def delete_all_data_step_1(call: CallbackQuery):
+    await call.message.edit_text('Вы точно хотите удалить все данные?', reply_markup=delete_all_data_kb())
+
+@user_router.callback_query(F.data == 'delete_all_data')
+async def delete_all_data_step_2(call: CallbackQuery):
+    await del_all_data(call.from_user.id)
+    await call.message.edit_text('Вы удалили все данные', reply_markup=to_menu_kb())

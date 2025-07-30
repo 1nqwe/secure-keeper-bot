@@ -64,3 +64,9 @@ async def delete_note(note_id):
     async with aiosqlite.connect('app/bot/database/db.db') as db:
         await db.execute("DELETE FROM notes WHERE id = ?", (note_id,))
         await db.commit()
+
+async def del_all_data(user_id):
+    async with aiosqlite.connect('app/bot/database/db.db') as db:
+        await db.execute("DELETE FROM notes WHERE user_id = ?", (user_id, ))
+        await db.execute("DELETE FROM passwords WHERE user_id = ?", (user_id, ))
+        await db.commit()
