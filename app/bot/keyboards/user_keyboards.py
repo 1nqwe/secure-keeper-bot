@@ -4,7 +4,13 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 def to_menu_kb():
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Меню", callback_data="to_menu"))
+    builder.add(InlineKeyboardButton(text="Назад", callback_data="to_menu"))
+    builder.adjust(1)
+    return builder.as_markup()
+
+def start_to_menu_kb():
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text='Меню', callback_data='to_menu'))
     builder.adjust(1)
     return builder.as_markup()
 
@@ -29,12 +35,10 @@ def my_passwords_kb(passwords):
     builder = InlineKeyboardBuilder()
 
     for password_id, title, login, password in passwords:
-        builder.button(
-            text=f"{title}",
-            callback_data=f"password_{password_id}"
-        )
-    builder.button(text="Меню",
-                    callback_data="to_menu")
+        builder.button(text=f"{title}",
+                       callback_data=f"password_{password_id}")
+
+    builder.button(text="Назад", callback_data="to_menu")
     builder.adjust(1)
     return builder.as_markup()
 
@@ -45,7 +49,7 @@ def password_kb(password_id):
     builder.adjust(1)
     return builder.as_markup()
 
-def back_to_passwords_list():
+def back_to_passwords_list_kb():
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text='Назад к списку', callback_data='list_passwords'))
     builder.adjust(1)
@@ -81,7 +85,7 @@ def encryption_kb():
     builder.add(InlineKeyboardButton(text='Base32', callback_data='encode_base32'))
     builder.add(InlineKeyboardButton(text='Hex', callback_data='encode_hex'))
     builder.add(InlineKeyboardButton(text='URL', callback_data='encode_url'))
-    builder.add(InlineKeyboardButton(text='Rot13', callback_data='encode_rot13'))
+    builder.add(InlineKeyboardButton(text='Назад', callback_data='to_menu'))
     builder.adjust(1)
     return builder.as_markup()
 
@@ -91,6 +95,46 @@ def decrypt_kb():
     builder.add(InlineKeyboardButton(text='Base32', callback_data='decode_base32'))
     builder.add(InlineKeyboardButton(text='Hex', callback_data='decode_hex'))
     builder.add(InlineKeyboardButton(text='URL', callback_data='decode_url'))
-    builder.add(InlineKeyboardButton(text='Rot13', callback_data='decode_rot13'))
+    builder.add(InlineKeyboardButton(text='Назад', callback_data='to_menu'))
+    builder.adjust(1)
+    return builder.as_markup()
+
+def leaks_menu_kb():
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text='Почта', callback_data='email_leaks'))
+    builder.add(InlineKeyboardButton(text='Назад', callback_data='to_menu'))
+    builder.adjust(1)
+    return builder.as_markup()
+
+def notes_menu_kb():
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text='Добавить заметку', callback_data='add_note'))
+    builder.add(InlineKeyboardButton(text='Список заметок', callback_data='list_notes'))
+    builder.add(InlineKeyboardButton(text='Назад', callback_data='to_menu'))
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+def my_notes_kb(notes):
+    builder = InlineKeyboardBuilder()
+
+    for note_id, title, note in notes:
+        builder.button(text=f"{title}",
+                       callback_data=f"note_{note_id}")
+
+    builder.button(text="Назад", callback_data="to_menu")
+    builder.adjust(1)
+    return builder.as_markup()
+
+def note_kb(note_id):
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text='Удалить заметку', callback_data=f'delete_note_{note_id}'))
+    builder.add(InlineKeyboardButton(text='Назад', callback_data='list_notes'))
+    builder.adjust(1)
+    return builder.as_markup()
+
+def back_to_notes_list_kb():
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text='Назад к списку', callback_data='list_notes'))
     builder.adjust(1)
     return builder.as_markup()

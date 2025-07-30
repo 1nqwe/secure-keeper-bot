@@ -37,3 +37,30 @@ async def delete_password(password_id):
     async with aiosqlite.connect('app/bot/database/db.db') as db:
         await db.execute("DELETE FROM passwords WHERE id = ?", (password_id,))
         await db.commit()
+
+
+async def add_note(user_id, title, note):
+    async with aiosqlite.connect('app/bot/database/db.db') as db:
+        async with db.execute('INSERT INTO notes (user_id, title, note) '
+                              'VALUES (?, ?, ?)',
+                              (user_id, title, note)) as cursor:
+            await db.commit()
+            return await cursor.fetchone()
+
+
+async def get_note_info(note_id):
+    async with aiosqlite.connect('app/bot/database/db.db') as db:
+        async with db.execute("SELECT title, note, created_at FROM notes WHERE id = ?",
+                              (note_id, )) as cursor:
+            return await cursor.fetchone()
+
+async def get_all_user_notes(user_id):
+    async with aiosqlite.connect('app/bot/database/db.db') as db:
+        async with db.execute("SELECT id, title, note FROM notes WHERE user_id = ?",
+                              (user_id,)) as cursor:
+            return await cursor.fetchall()
+
+async def delete_note(note_id):
+    async with aiosqlite.connect('app/bot/database/db.db') as db:
+        await db.execute("DELETE FROM notes WHERE id = ?", (note_id,))
+        await db.commit()

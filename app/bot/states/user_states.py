@@ -23,3 +23,6 @@ class Decoder(StatesGroup):
     decode_hex = State()
     decode_url = State()
     decode_rot13 = State()
+
+class CheckLeaks(StatesGroup):
+    email = State()

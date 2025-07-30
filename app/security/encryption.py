@@ -22,13 +22,7 @@ def decode_hex(text):
     return bytes.fromhex(text).decode('utf-8')
 
 def encode_url(text):
-    return quote(text)
+    return quote(text.encode('utf-8'))
 
 def decode_url(text):
     return unquote(text)
-
-def encode_rot13(text):
-    return codecs.encode(text, 'rot13')
-
-def decode_rot13(text):
-    return codecs.encode(text, 'rot13')

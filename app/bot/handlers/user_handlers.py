@@ -5,13 +5,15 @@ from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
-from app.bot.database.database import add_user, add_password, get_all_user_passwords, get_password_info, delete_password
+from app.bot.database.database import add_user, add_password, get_all_user_passwords, get_password_info, \
+    delete_password, add_note, get_all_user_notes, delete_note, get_note_info
 from app.bot.keyboards.user_keyboards import to_menu_kb, main_menu_kb, password_manager_menu_kb, my_passwords_kb, \
-    password_kb, back_to_passwords_list, generator_menu_kb, seed_phrase_kb, encryption_menu_kb, encryption_kb, \
-    decrypt_kb
-from app.bot.states.user_states import AddPassword, Encoder, Decoder
+    password_kb, generator_menu_kb, seed_phrase_kb, encryption_menu_kb, encryption_kb, \
+    decrypt_kb, leaks_menu_kb, notes_menu_kb, note_kb, back_to_passwords_list_kb, back_to_notes_list_kb, my_notes_kb
+from app.bot.services.leakcheck import check_email_leakcheck
+from app.bot.states.user_states import AddPassword, Encoder, Decoder, CheckLeaks, AddNote
 from app.security.encryption import encode_base64, decode_base64, encode_base32, decode_base32, encode_hex, decode_hex, \
-    encode_url, decode_url, encode_rot13, decode_rot13
+    encode_url, decode_url
 from app.security.password import generate_password
 from app.security.seed_phrase import generate_seed_phrase
 
@@ -72,7 +74,6 @@ async def add_password_step_4(message: Message, state: FSMContext):
         )
     except:
         await message.delete()
-
         await message.answer('Произошла ошибка при сохранении пароля', reply_markup=to_menu_kb())
     else:
         await message.delete()
@@ -86,10 +87,10 @@ async def list_passwords(call: CallbackQuery):
     await call.message.edit_text('Список', reply_markup=my_passwords_kb(passwords))
 
 @user_router.callback_query(F.data.startswith("password_"))
-async def task_info(call: CallbackQuery):
+async def password_info(call: CallbackQuery):
     password_id = call.data.split("_")[1]
-    password_info = await get_password_info(password_id)
-    title, login, password, created_at = password_info
+    password_inf = await get_password_info(password_id)
+    title, login, password, created_at = password_inf
     message = (
                 f"<b>Название:</b> <code>{title}</code>\n"
                 f"<b>Логин:</b> <code>{login}</code>\n"
@@ -102,7 +103,7 @@ async def task_info(call: CallbackQuery):
 async def del_task(call: CallbackQuery):
     password_id = call.data.split("_")[2]
     await delete_password(password_id)
-    await call.message.edit_text('Пароль удален', reply_markup=back_to_passwords_list())
+    await call.message.edit_text('Пароль удален', reply_markup=back_to_passwords_list_kb())
 
 
 @user_router.callback_query(F.data == 'generator_menu')
@@ -158,7 +159,7 @@ async def encode_base64_step_2(message: Message, state: FSMContext):
     encoded = encode_base64(data['message'])
     await message.delete()
     await message.answer(f'Ваше зашифрованное сообщение:\n'
-                         f'<code>{encoded}</code>', parse_mode='HTML')
+                         f'<code>{encoded}</code>', parse_mode='HTML', reply_markup=to_menu_kb())
     await state.clear()
 
 @user_router.callback_query(F.data == 'decode_base64')
@@ -176,7 +177,7 @@ async def decode_base64_step_2(message: Message, state: FSMContext):
     decoded = decode_base64(data['message'])
     await message.delete()
     await message.answer(f'Ваше расшифрованное сообщение:'
-                         f'\n<code>{decoded}</code>', parse_mode='HTML')
+                         f'\n<code>{decoded}</code>', parse_mode='HTML', reply_markup=to_menu_kb())
     await state.clear()
 
 @user_router.callback_query(F.data == 'encode_base32')
@@ -194,25 +195,25 @@ async def encode_base32_step_2(message: Message, state: FSMContext):
     encoded = encode_base32((data['message']))
     await message.delete()
     await message.answer(f'Ваше зашифрованное сообщение:\n'
-                         f'<code>{encoded}</code>', parse_mode='HTML')
+                         f'<code>{encoded}</code>', parse_mode='HTML', reply_markup=to_menu_kb())
     await state.clear()
 
 @user_router.callback_query(F.data == 'decode_base32')
 async def decode_base32_step_1(call: CallbackQuery, state: FSMContext):
-    await state.set_state(Encoder.encode_base32)
+    await state.set_state(Decoder.decode_base32)
     await call.message.edit_text('Напишите сообщение для расшифровки\n\n'
                                  '<i>Это сообщение удалится через 5 секунд</i>', parse_mode='HTML')
     await asyncio.sleep(5)
     await call.message.delete()
 
-@user_router.message(Decoder.decode_base64)
+@user_router.message(Decoder.decode_base32)
 async def decode_base32_step_2(message: Message, state: FSMContext):
     await state.update_data(message=message.text)
     data = await state.get_data()
     decoded = decode_base32(data['message'])
     await message.delete()
     await message.answer(f'Ваше расшифрованное сообщение:'
-                         f'\n<code>{decoded}</code>', parse_mode='HTML')
+                         f'\n<code>{decoded}</code>', parse_mode='HTML', reply_markup=to_menu_kb())
     await state.clear()
 
 @user_router.callback_query(F.data == 'encode_hex')
@@ -230,7 +231,7 @@ async def encode_hex_step_2(message: Message, state: FSMContext):
     encoded = encode_hex((data['message']))
     await message.delete()
     await message.answer(f'Ваше зашифрованное сообщение:\n'
-                         f'<code>{encoded}</code>', parse_mode='HTML')
+                         f'<code>{encoded}</code>', parse_mode='HTML', reply_markup=to_menu_kb())
     await state.clear()
 
 @user_router.callback_query(F.data == 'decode_hex')
@@ -248,7 +249,7 @@ async def decode_hex_step_2(message: Message, state: FSMContext):
     decoded = decode_hex(data['message'])
     await message.delete()
     await message.answer(f'Ваше расшифрованное сообщение:'
-                         f'\n<code>{decoded}</code>', parse_mode='HTML')
+                         f'\n<code>{decoded}</code>', parse_mode='HTML', reply_markup=to_menu_kb())
     await state.clear()
 
 @user_router.callback_query(F.data == 'encode_url')
@@ -259,14 +260,14 @@ async def encode_url_step_1(call: CallbackQuery, state: FSMContext):
     await asyncio.sleep(5)
     await call.message.delete()
 
-@user_router.message(Encoder.encode_hex)
+@user_router.message(Encoder.encode_url)
 async def encode_url_step_2(message: Message, state: FSMContext):
     await state.update_data(message=message.text)
     data = await state.get_data()
     encoded = encode_url((data['message']))
     await message.delete()
     await message.answer(f'Ваше зашифрованное сообщение:\n'
-                         f'<code>{encoded}</code>', parse_mode='HTML')
+                         f'<code>{encoded}</code>', parse_mode='HTML', reply_markup=to_menu_kb())
     await state.clear()
 
 @user_router.callback_query(F.data == 'decode_url')
@@ -284,41 +285,90 @@ async def decode_url_step_2(message: Message, state: FSMContext):
     decoded = decode_url(data['message'])
     await message.delete()
     await message.answer(f'Ваше расшифрованное сообщение:'
-                         f'\n<code>{decoded}</code>', parse_mode='HTML')
+                         f'\n<code>{decoded}</code>', parse_mode='HTML', reply_markup=to_menu_kb())
     await state.clear()
 
-@user_router.callback_query(F.data == 'encode_rot13')
-async def encode_rot13_step_1(call: CallbackQuery, state: FSMContext):
-    await state.set_state(Encoder.encode_rot13)
-    await call.message.edit_text('Напишите сообщение для зашифровки\n\n'
-                                 '<i>Это сообщение удалится через 5 секунд</i>', parse_mode='HTML')
+@user_router.callback_query(F.data == 'leaks_menu')
+async def leaks_menu(call: CallbackQuery):
+    await call.message.edit_text('Выберите что проверить на утечки', reply_markup=leaks_menu_kb())
+
+@user_router.callback_query(F.data == 'email_leaks')
+async def email_leaks_step_1(call: CallbackQuery, state: FSMContext):
+    await state.set_state(CheckLeaks.email)
+    await call.message.edit_text('Введите почту\n\n'
+                                 '<i>Это сообщение удалится через 5 секунд</i>', parse_mode="HTML")
     await asyncio.sleep(5)
     await call.message.delete()
 
-@user_router.message(Encoder.encode_rot13)
-async def encode_rot13_step_2(message: Message, state: FSMContext):
-    await state.update_data(message=message.text)
+@user_router.message(CheckLeaks.email)
+async def email_leaks_step_2(message: Message, state: FSMContext):
+    await state.update_data(email=message.text)
     data = await state.get_data()
-    encoded = encode_rot13((data['message']))
+    checked = await check_email_leakcheck(data['email'])
     await message.delete()
-    await message.answer(f'Ваше зашифрованное сообщение:\n'
-                         f'<code>{encoded}</code>', parse_mode='HTML')
-    await state.clear()
+    await message.answer(checked, reply_markup=to_menu_kb(), parse_mode="HTML")
 
-@user_router.callback_query(F.data == 'decode_rot13')
-async def decode_rot13_step_1(call: CallbackQuery, state: FSMContext):
-    await state.set_state(Decoder.decode_rot13)
-    await call.message.edit_text('Напишите сообщение для расшифровки\n\n'
-                                 '<i>Это сообщение удалится через 5 секунд</i>', parse_mode='HTML')
+@user_router.callback_query(F.data == 'notes_menu')
+async def notes_menu(call: CallbackQuery):
+    await call.message.edit_text('Выберите действие', reply_markup=notes_menu_kb())
+
+@user_router.callback_query(F.data == 'add_note')
+async def add_note_step_1(call: CallbackQuery, state: FSMContext):
+    await state.set_state(AddNote.title)
+    await call.message.edit_text('Введите название для заметки\n\n'
+                                 '<i>Это сообщение удалится через 5 секунд</i>', parse_mode="HTML")
     await asyncio.sleep(5)
     await call.message.delete()
 
-@user_router.message(Decoder.decode_rot13)
-async def decode_rot13_step_2(message: Message, state: FSMContext):
-    await state.update_data(message=message.text)
-    data = await state.get_data()
-    decoded = decode_rot13(data['message'])
+@user_router.message(AddNote.title)
+async def add_note_step_2(message: Message, state: FSMContext):
+    await state.update_data(title=message.text)
+    await state.set_state(AddNote.note)
     await message.delete()
-    await message.answer(f'Ваше расшифрованное сообщение:'
-                         f'\n<code>{decoded}</code>', parse_mode='HTML')
-    await state.clear()
+    msg = await message.answer('Введите заметку\n\n'
+                               '<i>это сообщение удалится через 5 секунд</i>', parse_mode="HTML")
+    await asyncio.sleep(5)
+    await msg.delete()
+
+@user_router.message(AddNote.note)
+async def add_note_step_3(message: Message, state: FSMContext):
+    await state.update_data(note=message.text)
+    data = await state.get_data()
+    try:
+        await add_note(
+            user_id=message.from_user.id,
+            title=data['title'],
+            note=data['note']
+        )
+    except:
+        await message.delete()
+        await message.answer('Произошла ошибка при сохранении пароля', reply_markup=to_menu_kb())
+    else:
+        await message.delete()
+        await message.answer('Данные успешно добавлены', reply_markup=to_menu_kb())
+    finally:
+        await state.clear()
+
+@user_router.callback_query(F.data == 'list_notes')
+async def notes_list(call: CallbackQuery):
+    notes = await get_all_user_notes(call.from_user.id)
+    await call.message.edit_text('Список', reply_markup=my_notes_kb(notes))
+
+@user_router.callback_query(F.data.startswith("note_"))
+async def note_info(call: CallbackQuery):
+    note_id = call.data.split("_")[1]
+    note_inf = await get_note_info(note_id)
+    print(note_inf)
+    title, note, created_at = note_inf
+    message = (
+                f"<b>Название:</b> <code>{title}</code>\n"
+                f"<b>Заметка:</b> <code>{note}</code>\n"
+                f"<b>Дата создания:</b> <code>{created_at.split()[0]}</code>"
+    )
+    await call.message.edit_text(message, reply_markup=note_kb(note_id), parse_mode="HTML")
+
+@user_router.callback_query(F.data.startswith("delete_note_"))
+async def del_task(call: CallbackQuery):
+    note_id = call.data.split("_")[2]
+    await delete_note(note_id)
+    await call.message.edit_text('Заметка удалена', reply_markup=back_to_notes_list_kb())
